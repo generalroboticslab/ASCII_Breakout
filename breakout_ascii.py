@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
     # Run for 1000 actions
     # Replicate Atari-GPT
-    for i in range(20):
+    for i in range(1000):
         action = None
         for _ in range(3):
             
