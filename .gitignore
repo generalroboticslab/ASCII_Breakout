@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+all_responses.txt
+HG_API_KEY.txt
+OPENAI_API_KEY.txt
+breakout.mp4
+actions_rewards.csv
+.DS_Store
+
 # Distribution / packaging
 .Python
 build/

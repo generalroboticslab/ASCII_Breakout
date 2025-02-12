@@ -1,0 +1,9 @@
+accelerate>=0.26.0
+imageio[ffmpeg]
+pillow==9.5.0
+transformers 
+gymnasium
+imageio
+openai
+numpy
+torch
