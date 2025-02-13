@@ -177,7 +177,6 @@ def ascii_to_image(ascii_text: str, num_cols=80, num_rows=24) -> Image.Image:
     
     return image
 
-# Revised main loop.
 if __name__ == "__main__":
 
     api_value = input("Do you want to run OpenAI GPT-4o (1) or Llama 3.2 3B (2)? ")
@@ -237,6 +236,8 @@ if __name__ == "__main__":
     # Replicate Atari-GPT
     for i in range(1000):
         action = None
+        # Give 3 chances at providing a correct action
+        # If a correct action is given then break
         for _ in range(3):
             
             messages.append({
