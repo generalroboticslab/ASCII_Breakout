@@ -240,7 +240,7 @@ if __name__ == "__main__":
     file.close()
     # Run for 1000 actions
     # Replicate Atari-GPT
-    with tqdm(total=200, desc="Testing") as pbar:
+    for i in tqdm(range(200), desc="Testing"):
         action = None
         # Give 3 chances at providing a correct action
         # If a correct action is given then break
@@ -261,7 +261,7 @@ if __name__ == "__main__":
             
             if api_value == str(1):
                 response = client.chat.completions.create(
-                    model="gpt-4o-2024-11-20",
+                    model="o3-mini-2025-01-31",
                     messages=messages,
                     temperature=1,
                 )
@@ -278,8 +278,9 @@ if __name__ == "__main__":
                 output_decode = tokenizer.decode(outputs[0])
 
             # Write the message to a text file 
-            with open('./all_responses.txt', "a") as file:
+            with open('./all_responses.txt', "a", encoding='utf-8') as file:
                 file.write(str(output_decode) + '\n\n')
+
 
             try:
                 action = extract_action(output_decode)
