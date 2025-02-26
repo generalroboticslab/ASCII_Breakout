@@ -180,21 +180,40 @@ def ascii_to_image(ascii_text: str, num_cols=80, num_rows=24) -> Image.Image:
 
 if __name__ == "__main__":
 
-    api_value = input("Do you want to run OpenAI GPT-4o (1) or Llama 3.2 3B (2)? ")
+    api_value = input("Do you want to run OpenAI GPT-4o (1),  OpenAI GPT-4o-mini (2), OpenAI o1-mini (3), OpenAI o3-mini (4), Llama 3.2 3B (5)?, or ALL (6)")
 
     if api_value == str(1):
         print("\nSetting up GPT-4o...\n")
         openai_api_file = open("OPENAI_API_KEY.txt", "r") 
         openai_api_key = openai_api_file.read() 
         client = OpenAI(api_key=openai_api_key) 
+        models = ["gpt-4o-2024-08-06"]
+    elif api_value == str(2):
+        print("\nSetting up GPT-o1-mini...\n")
+        openai_api_file = open("OPENAI_API_KEY.txt", "r") 
+        openai_api_key = openai_api_file.read() 
+        client = OpenAI(api_key=openai_api_key) 
+        models = ["gpt-4o-mini-2024-07-18"]
 
-    else:
+    elif api_value == str(3):
+        print("\nSetting up GPT-4o...\n")
+        openai_api_file = open("OPENAI_API_KEY.txt", "r") 
+        openai_api_key = openai_api_file.read() 
+        client = OpenAI(api_key=openai_api_key) 
+        models = ["o1-mini-2024-09-12"]
+
+    elif api_value == str(4):
+        print("\nSetting up GPT-4o...\n")
+        openai_api_file = open("OPENAI_API_KEY.txt", "r") 
+        openai_api_key = openai_api_file.read() 
+        client = OpenAI(api_key=openai_api_key) 
+        models = ["o3-mini-2025-01-31"]
+
+    elif api_value == str(5):
         print("\nSetting up Llama 3.2 3B...\n")
         hugging_face_api_file = open("HG_API_KEY.txt", "r") 
         hugging_face_api_key = hugging_face_api_file.read() 
-
         login(token=hugging_face_api_key)
-
         set_seed(42)
         device = get_device()
         
@@ -205,142 +224,184 @@ if __name__ == "__main__":
             device_map={"": device},
             torch_dtype=torch.bfloat16,
         )
+        models = ["llama"]
+    else:
+        print("\nSetting up GPT...\n")
+        openai_api_file = open("OPENAI_API_KEY.txt", "r") 
+        openai_api_key = openai_api_file.read() 
+        client = OpenAI(api_key=openai_api_key) 
+        models = ["gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06", "o3-mini-2025-01-31", "gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06", "o3-mini-2025-01-31", "gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06", "o3-mini-2025-01-31",]
 
     print("\nModel set up complete...\n")
-    
-    messages = [{"role": "system", "content": f"You are a professional Atari 2600 game playing assistant and will be provided an ASCII representation of Breakout. "
-                    "Breakout uses a paddle to hit a ball with the aim of breaking all bricks. Your goal is to provide me with"
-                    "the best action I could take to break all the bricks while hitting the ball with the paddle, I only have control of the paddle and "
-                    "can only move it left or right. You will receive observations in a 80 by 24 grid, extending [0-79, 0-24] x and y, where:"
-                    "'#' represents the border of the game, 'B' represents a brick cell, '=' represents part of your paddle, '0' represents the ball, and ' ' represents empty space."
-                    "Take as long as you need to COMPLETELY understand the board, and location of the paddle and ball toshow me the exact game state we are in."
-                    "Double check your work to find the exact coordinate locations of the ball and paddle, this is essential. Make sure your calculations are correct, and redo them EVENY step."
-                    "Once you have done this take that information and think step by step what the best action you could "
-                    "take to keep the paddle in line with the ball. The potential actions I can take are <action> 0 </action> for NOOP, <action> 1 </action> for LEFT and "
-                    "<action> 2 </action> for RIGHT. Provide output as a where your reasoning is between <reasoning> meta tags, this is a scratchpad for you to think, take as long as you need. "
-                    "In addition, please add the numerical value for the action inbetween <action> </action> meta tags."
-         }]
-
-    env = BrickBreakerEnv(render_mode="human")
-    
-    obs, _ = env.reset(seed=42)
-
-    # Record the initial frame.
-    frames = []
-    frames.append(ascii_to_image(obs, num_cols=160, num_rows=48))
-
-    total_rewards = 0
-    cumulative_rewards = []
-    action_list = []
-
-    # Should be number of inputs*2 + 1
-    max_message_len = 7 # 3 input messages 
-    with open('./all_responses.txt', "w") as file:
-        file.write('')
-    file.close()
-    # Run for 1000 actions
-    # Replicate Atari-GPT
-    for i in tqdm(range(200), desc="Testing"):
-        action = None
-        # Give 3 chances at providing a correct action
-        # If a correct action is given then break
-        for _ in range(3):
-            
-            messages.append({
-                    "role": "user",
-                    "content": 
-                            f"This is the current game state:\n{obs}\n\n"
-                            "First, spatially interpret your observations and provide a summary of the current game state, including the exact position of key information such as your paddle and the ball."
-                            "Based on the provided game state, please determine the best action to take. Remember:\n"
-                            "- Provide your detailed reasoning between <reasoning> and </reasoning> meta tags.\n"
-                            "- Then, immediately provide your chosen action between <action> and </action> meta tags, with no extra text or formatting."
-                            "Remember your action output should only be one of these 3 options <action> 0 </action> for NOOP, <action> 1 </action> for LEFT and <action> 2 </action> for RIGHT\n"
-                            "Show me what the current game state is:\n"
-                        }
-                    )
-            
-            if api_value == str(1):
-                response = client.chat.completions.create(
-                    model="o3-mini-2025-01-31",
-                    messages=messages,
-                    temperature=1,
-                )
-
-                output_decode = response.choices[0].message.content
-            
-            else:
-                input_ids = tokenizer.apply_chat_template(
-                    messages, return_tensors="pt", return_dict=True
-                ).to(get_device())
-
-                outputs = model.generate(**input_ids, max_new_tokens=4096)
-
-                output_decode = tokenizer.decode(outputs[0])
-
-            # Write the message to a text file 
-            with open('./all_responses.txt', "a", encoding='utf-8') as file:
-                file.write(str(output_decode) + '\n\n')
 
 
-            try:
-                action = extract_action(output_decode)
-                print(f"Extracted action: {action}")
-                break
+    for m in range(len(models)):
+        
+        print("testing "+str(models[m]))
 
-            except ValueError as e:
-                print("Extraction error:", e)
-                messages.append({
-                    "role": "user",
-                    "content":  "You did not put the action between the <action> and </action> meta tags. PROVIDE THE ENDING ACTION ONLY BETWEEN THESE META TAGS."
-                })
+        messages = [{"role": "user", "content": f"You are a professional Atari 2600 game playing assistant and will be provided an ASCII representation of Breakout. "
+                        "Breakout uses a paddle to hit a ball with the aim of breaking all bricks. Your goal is to provide me with"
+                        "the best action I could take to break all the bricks while hitting the ball with the paddle, I only have control of the paddle and "
+                        "can only move it left or right. You will receive observations in a 80 by 24 grid, extending [0-79, 0-24] x and y, where:"
+                        "'#' represents the border of the game, 'B' represents a brick cell, '=' represents part of your paddle, '0' represents the ball, and ' ' represents empty space."
+                        "Take as long as you need to COMPLETELY understand the board, and location of the paddle and ball toshow me the exact game state we are in."
+                        "Double check your work to find the exact coordinate locations of the ball and paddle, this is essential. Make sure your calculations are correct, and redo them EVENY step."
+                        "Once you have done this take that information and think step by step what the best action you could "
+                        "take to keep the paddle in line with the ball. The potential actions I can take are <action> 0 </action> for NOOP, <action> 1 </action> for LEFT and "
+                        "<action> 2 </action> for RIGHT. Provide output as a where your reasoning is between <reasoning> meta tags, this is a scratchpad for you to think, take as long as you need. "
+                        "In addition, please add the numerical value for the action inbetween <action> </action> meta tags."
+            }]
 
-        messages.append({
-            "role": "assistant",
-            "content": output_decode
-        })
+        env = BrickBreakerEnv(render_mode="human")
+        
+        obs, _ = env.reset(seed=42)
 
-        action_list.append(action)
-
-        obs, reward, done, truncated, info = env.step(action)
-
-        total_rewards += reward
-        cumulative_rewards.append(total_rewards)
-
+        # Record the initial frame.
+        frames = []
         frames.append(ascii_to_image(obs, num_cols=160, num_rows=48))
 
-        if len(messages) >= max_message_len:
-            # pop the user and assistant message FIFO
-            # use index 1 because of system prompt
-            messages.pop(1)
-            messages.pop(1)
+        total_rewards = 0
+        cumulative_rewards = []
+        action_list = []
 
-        if done:
-            obs, _ = env.reset(seed=42)
-            frame_img = ascii_to_image(obs)
-            frames.append(frame_img)
-            done = False
+        # Should be number of inputs*2 + 1
+        max_message_len = 7 # 3 input messages 
+        with open(f'./{m}_{models[m]}_all_responses.txt', "w") as file:
+            file.write('')
+        file.close()
+        # Run for 1000 actions
+        # Replicate Atari-GPT
+        for i in tqdm(range(300), desc="Testing"):
+            action = None
+            # Give 3 chances at providing a correct action
+            # If a correct action is given then break
+            for s in range(3):
+                success = False
+                try:
+                    for _ in range(3):
+                        
+                        messages.append({
+                                "role": "user",
+                                "content": 
+                                        f"This is the current game state:\n{obs}\n\n"
+                                        "First, spatially interpret your observations and provide a summary of the current game state, including the exact position of key information such as your paddle and the ball. DO NOT return your entire observations."
+                                        "Based on the provided game state, please determine the best action to take. Remember:\n"
+                                        "- Provide your detailed reasoning between <reasoning> and </reasoning> meta tags.\n"
+                                        "- Then, immediately provide your chosen action between <action> and </action> meta tags, with no extra text or formatting."
+                                        "Remember your action output should only be one of these 3 options <action> 0 </action> for NOOP, <action> 1 </action> for LEFT and <action> 2 </action> for RIGHT\n"
+                                        "Show me what the current game state is:\n"
+                                    }
+                                )
+                        
+                        
+                        
+                        if api_value == str(5):
+                            input_ids = tokenizer.apply_chat_template(
+                                messages, return_tensors="pt", return_dict=True
+                            ).to(get_device())
+
+                            outputs = model.generate(**input_ids, max_new_tokens=4096)
+
+                            output_decode = tokenizer.decode(outputs[0])
+                        else:
+                            response = client.chat.completions.create(
+                                model=models[m],
+                                messages=messages,
+                                temperature=1
+
+                            )
+
+                            output_decode = response.choices[0].message.content
+
+                        # Write the message to a text file 
+                        with open(f"./{m}_{models[m]}_all_responses.txt", "a", encoding='utf-8') as file:
+                            file.write(str(output_decode) + '\n\n')
+
+
+                        try:
+                            action = extract_action(output_decode)
+                            print(f"Extracted action: {action}")
+                            break
+
+                        except ValueError as e:
+                            print("Extraction error:", e)
+                            messages.append({
+                                "role": "user",
+                                "content":  "You did not put the action between the <action> and </action> meta tags. PROVIDE THE ENDING ACTION ONLY BETWEEN THESE META TAGS."
+                            })
+                    success = True
+
+                except:
+                    print("prompt/output error")
+                    success = False
+                if success:
+                    break
+            messages.append({
+                "role": "assistant",
+                "content": output_decode
+            })
+
+            action_list.append(action)
+
+            obs, reward, done, truncated, info = env.step(action)
+
+            total_rewards += reward
+            cumulative_rewards.append(total_rewards)
+            valid_size = (960, 528)
+            
+            img = ascii_to_image(obs, num_cols=160, num_rows=48)
+
+            if img.size == valid_size:
+                frames.append(img)
+            else:
+                print(f"Skipping frame with incorrect size: {img.shape}")
+
+            if len(messages) >= max_message_len:
+                # pop the user and assistant message FIFO
+                # use index 1 because of system prompt
+                messages.pop(1)
+                messages.pop(1)
+
+            if done:
+                obs, _ = env.reset(seed=42)
+                frame_img = ascii_to_image(obs)
+                frames.append(frame_img)
+                done = False
+            
+            print("Step ", i)
+
+            time.sleep(0.1)
+
+        print("\n\n Total Reward: ", total_rewards)
+
+        print("Saving video of performance...")
+        video_filename = f"{m}_{models[m]}_breakout.mp4"
+        images = [np.array(frame) for frame in frames if frame is not None]
+
+        frame_shapes = [img.shape for img in images]
+        from collections import Counter
+        most_common_shape, _ = Counter(frame_shapes).most_common(1)[0]
+
+
+        filtered_images = [img for img in images if img.shape == most_common_shape]
+        if filtered_images:
+            try:
+                imageio.mimwrite(video_filename, filtered_images, fps=env.metadata["render_fps"])
+                print(f"Saved video as {video_filename}")
+            except Exception as e:
+                print(f"Error saving video: {e}")
+        else:
+            print("No valid frames to save.")
+
+        print("Saving actions and cumulative rewards...")
+
+        header = ["actions", "cumulative_rewards"]
+
+        with open(f'./{m}_{models[m]}_actions_rewards.csv', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            
+            for action, cum_reward in zip(action_list, cumulative_rewards):
+                writer.writerow([action, cum_reward])
         
-        print("Step ", i)
-
-        time.sleep(0.1)
-
-    print("\n\n Total Reward: ", total_rewards)
-
-    print("Saving video of performance...")
-    video_filename = "breakout.mp4"
-    images = [np.array(frame) for frame in frames if frame is not None]
-    imageio.mimwrite(video_filename, images, fps=env.metadata["render_fps"])
-    print(f"Saved video as {video_filename}")
-
-    print("Saving actions and cumulative rewards...")
-
-    header = ["actions", "cumulative_rewards"]
-
-    with open('./actions_rewards.csv', 'w') as f:
-          writer = csv.writer(f)
-          writer.writerow(header)
-          
-          for action, cum_reward in zip(action_list, cumulative_rewards):
-              writer.writerow([action, cum_reward])
-    
-    print("\nTest complete, Thank you!\n")
+        print("\nTest complete, Thank you!\n")
