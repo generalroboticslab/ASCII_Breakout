@@ -8,17 +8,20 @@ class PromptConfigurator:
             # Game-Specific Components
             "context": {
                 "breakout": "You are a professional Atari 2600 Breakout player.",
-                "space_invaders": "You are a professional Atari 2600 Space Invaders player.",
+                "asteroids": "You are a professional Atari 2600 Asteroids player.",
+                "galaxian": "You are a professional Atari 2600 Galaxian player"
                 # Add more game-specific contexts
             },
             "game_context": {
                 "breakout": "Breakout uses a paddle to bounce a ball with the aim of breaking all the bricks.",
-                "space_invaders": "Space Invaders involves defending against descending alien invaders by shooting them.",
+                "asteroids": "Asteroids controls a space ship in zero gravity dodging and shooting moving asteroids. Earn points by destroying asteroids",
+                "galaxian": "Galaxian controls a space ship with the aim of fighting and dodging against charging alien ships. Earn points by destroying alien ship",
                 # Add more game-specific game contexts
             },
             "strategy": {
                 "breakout": "Keep the center of the paddle lined up with the ball on the x-axis.",
-                "space_invaders": "Strategically eliminate aliens while avoiding their projectiles.",
+                "asteroids": "Stay in control of your velocity, while contantly shooting",
+                "galaxian": "Constantly shoot while dodging projectiles to take out enemies",
                 # Add more game-specific strategies
             },
             "actions": {
@@ -29,7 +32,16 @@ class PromptConfigurator:
                     "• <action> 2 </action> for RIGHT\n"
                     "Immediately output the numerical value for the chosen action between the <action> tags, with no additional text or formatting."
                 ),
-                "space_invaders": (
+                "asteroids": (
+                    "Your goal is to provide the optimal action in the given game state. Your possible actions are:\n"
+                    "• <action> 0 </action> for NOOP (do nothing)\n"
+                    "• <action> 1 </action> for rotate LEFT\n"
+                    "• <action> 2 </action> for rotate RIGHT\n"
+                    "• <action> 3 </action> for thrusters FORWARD\n"
+                    "• <action> 4 </action> for SHOOT\n"
+                    "Immediately output the numerical value for the chosen action between the <action> tags, with no additional text or formatting."
+                ),
+                "galaxian": (
                     "Your goal is to provide the optimal action in the given game state. Your possible actions are:\n"
                     "• <action> 0 </action> for NOOP (do nothing)\n"
                     "• <action> 1 </action> for LEFT\n"
@@ -49,14 +61,23 @@ class PromptConfigurator:
                     "• And empty space represented as ' '\n"
                     "The game board spans [0-79, 0-24] characters with newlines dividing rows."
                 ),
-                "space_invaders": (
+                "asteroids": (
                     "You will receive an ASCII character grid representation of the game board that includes:\n"
-                    "• Your ship represented as '^'\n"
-                    "• Alien ships represented as 'W'\n"
-                    "• Projectiles represented as '|'\n"
+                    "• Your ship represented as an arrow '^' in the direction you are facing\n"
+                    "• Asteroids represented as 'O'\n"
+                    "• Projectiles represented as '*'\n"
                     "• Boundry represented as '#'\n"
                     "• And empty space represented as ' '\n"
-                    "The game board spans [0-79, 0-24] characters with newlines dividing rows."
+                    "The game board spans [0-61, 0-31] characters with newlines dividing rows."
+                ),
+                "galaxian": (
+                    "You will receive an ASCII character grid representation of the game board that includes:\n"
+                    "• Your ship represented as an 'A'"
+                    "• Enemy Ships represented as 'M'\n"
+                    "• Your Projectiles represented as '*'\n"
+                    "• Enemy Projectiles represented as '!'\n"
+                    "• And empty space represented as ' '\n"
+                    "The game board spans [0-41, 0-21] characters with newlines dividing rows."
                 ),
                 # Add more game-specific observation descriptions
             },
